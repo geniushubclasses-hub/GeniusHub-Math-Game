@@ -59,12 +59,26 @@
             background-color: #10b981 !important;
             color: white !important;
             border-color: #059669 !important;
+            animation: pulse-green 0.5s;
         }
 
         .wrong {
             background-color: #ef4444 !important;
             color: white !important;
             border-color: #dc2626 !important;
+            animation: shake 0.4s;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         .progress-bar {
@@ -80,33 +94,20 @@
             transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
+        .animate-pop {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
         @keyframes popIn {
             0% { transform: scale(0.9); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-
-        .animate-pop {
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
         
-        #hidden-canvas {
-            display: none;
-        }
+        #hidden-canvas { display: none; }
 
-        .mode-card {
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border-width: 2px;
-        }
-        .mode-card:hover {
-            transform: translateY(-3px);
-            border-color: #6366f1;
-        }
-        .mode-card.selected {
-            background-color: #eef2ff;
-            border-color: #6366f1;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-        }
+        .mode-card { transition: all 0.2s ease; cursor: pointer; border-width: 2px; }
+        .mode-card:hover { transform: translateY(-3px); border-color: #6366f1; }
+        .mode-card.selected { background-color: #eef2ff; border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); }
 
         #share-loading {
             display: none;
@@ -119,6 +120,15 @@
             align-items: center;
             color: white;
             font-weight: bold;
+        }
+
+        .mistake-item {
+            background: #fff5f5;
+            border-left: 4px solid #feb2b2;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.875rem;
         }
     </style>
 </head>
@@ -196,7 +206,7 @@
         </div>
 
         <!-- Screen: Results -->
-        <div id="screen-result" class="hidden animate-pop">
+        <div id="screen-result" class="hidden animate-pop overflow-y-auto max-h-[85vh]">
             <div class="text-center">
                 <div id="congrats-header" class="hidden mb-4 sm:mb-6">
                     <div class="text-5xl sm:text-6xl mb-2 sm:mb-4">🏆</div>
@@ -206,7 +216,7 @@
                 
                 <h2 class="text-xl sm:text-2xl font-bold text-indigo-800 mb-4 sm:mb-6" id="result-title">Practice Summary</h2>
                 
-                <div class="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 text-left space-y-2 sm:space-y-3 text-sm sm:text-base">
+                <div class="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 text-left space-y-2 sm:space-y-3 text-sm sm:text-base">
                     <div class="flex justify-between border-b pb-1 sm:pb-2">
                         <span class="text-gray-500">Player:</span>
                         <span class="font-bold text-gray-800" id="res-name">-</span>
@@ -233,6 +243,14 @@
                     </div>
                 </div>
 
+                <!-- Mistakes Review -->
+                <div id="mistakes-container" class="hidden mb-6 text-left">
+                    <p class="text-xs font-bold text-gray-400 uppercase mb-3 px-1">Review Mistakes</p>
+                    <div id="mistakes-list" class="max-h-48 overflow-y-auto pr-1">
+                        <!-- Items injected by JS -->
+                    </div>
+                </div>
+
                 <div class="flex flex-col gap-2 sm:gap-3">
                     <button onclick="shareResult()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 sm:py-4 rounded-xl shadow-lg transition-all text-sm sm:text-base flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
@@ -251,6 +269,32 @@
     <canvas id="hidden-canvas" width="600" height="800"></canvas>
 
     <script>
+        // --- AUDIO HELPERS ---
+        const playSound = (type) => {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.1); // C6
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            }
+        };
+
         // --- CONFIGURATION ---
         const gameConfig = {
             add: {
@@ -307,6 +351,7 @@
         let currentQuestion = { a: 0, b: 0, op: '', answer: 0 };
         let isAnswering = false;
         let questionDeck = [];
+        let mistakes = [];
 
         const screens = {
             menu: document.getElementById('screen-menu'),
@@ -385,6 +430,7 @@
             questionNumber = 1;
             correctAnswers = 0;
             attemptedQuestions = 0;
+            mistakes = [];
             questionDeck = createDeck(levelIdx, selectedMode);
             document.getElementById('game-player-display').innerText = playerName;
             document.getElementById('game-level-display').innerText = `${gameConfig[selectedMode].name} • Level ${levelIdx + 1}`;
@@ -438,9 +484,18 @@
             if (isAnswering) return;
             isAnswering = true;
             attemptedQuestions++;
-            if (selected === currentQuestion.answer) { correctAnswers++; btn.classList.add('correct'); }
-            else {
+            if (selected === currentQuestion.answer) {
+                correctAnswers++;
+                btn.classList.add('correct');
+                playSound('correct');
+            } else {
                 btn.classList.add('wrong');
+                playSound('wrong');
+                mistakes.push({
+                    q: `${currentQuestion.a} ${currentQuestion.op} ${currentQuestion.b}`,
+                    ans: currentQuestion.answer,
+                    user: selected
+                });
                 Array.from(document.querySelectorAll('.option-btn')).forEach(b => {
                     if (parseInt(b.innerText) === currentQuestion.answer) b.classList.add('correct');
                 });
@@ -464,6 +519,22 @@
             document.getElementById('res-score').innerText = `${scorePercent}%`;
             document.getElementById('res-time').innerText = totalTimeStr;
             document.getElementById('progress-fill').style.width = `100%`;
+
+            // Render mistakes
+            const mistakesContainer = document.getElementById('mistakes-container');
+            const mistakesList = document.getElementById('mistakes-list');
+            if (mistakes.length > 0) {
+                mistakesContainer.classList.remove('hidden');
+                mistakesList.innerHTML = mistakes.map(m => `
+                    <div class="mistake-item flex justify-between items-center">
+                        <span>${m.q} = <strong>${m.ans}</strong></span>
+                        <span class="text-xs text-red-500 line-through">You: ${m.user}</span>
+                    </div>
+                `).join('');
+            } else {
+                mistakesContainer.classList.add('hidden');
+            }
+
             if (correctAnswers >= 45) {
                 document.getElementById('congrats-header').classList.remove('hidden');
                 document.getElementById('result-title').innerText = "Legendary Performance!";
