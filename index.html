@@ -1,282 +1,601 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GeniusHub Math Master</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 10px;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
 
-<title>GeniusHub Math Game</title>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            padding: 1.5rem;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
 
-<style>
-:root{
-  --bg1:#cdeac0;
-  --bg2:#d0cfff;
-  --card:#ffffff;
-  --accent:#ff7aa2;
-  --accent2:#6ec6ff;
-  --text:#123;
-}
+        @media (min-width: 640px) {
+            .glass-card {
+                padding: 2.5rem;
+                border-radius: 2rem;
+            }
+        }
 
-*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid #e2e8f0;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-body{
-  margin:0;min-height:100vh;
-  background:linear-gradient(180deg,var(--bg1),var(--bg2));
-  display:flex;align-items:center;justify-content:center;
-  padding:10px;color:var(--text);
-}
+        .option-btn:hover {
+            transform: translateY(-2px);
+            border-color: #667eea;
+            background-color: #f8fafc;
+        }
 
-.app{
-  width:100%;max-width:540px;
-  background:var(--card);
-  border-radius:18px;padding:14px;
-  box-shadow:0 10px 30px rgba(0,0,0,.15);
-}
+        .option-btn:active {
+            transform: scale(0.95);
+        }
 
-/* HEADER */
-header{text-align:center}
-.logo{
-  width:72px;height:72px;margin:0 auto 6px;
-  border-radius:16px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#fff;font-weight:900;
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;
-}
-h1{font-size:20px;margin:4px 0}
-.lead{font-size:13px;color:#345}
+        .correct {
+            background-color: #10b981 !important;
+            color: white !important;
+            border-color: #059669 !important;
+        }
 
-/* SETUP */
-.panel{margin-top:14px}
-label{font-size:14px;font-weight:600}
-input[type=text]{
-  width:100%;padding:14px;font-size:18px;
-  border-radius:12px;border:1px solid #ccc;margin-top:6px;
-}
+        .wrong {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
 
-.levels{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
-.level-btn{
-  padding:14px;font-size:16px;border-radius:12px;
-  border:2px dashed #ddd;background:#fff;font-weight:700;
-}
-.level-btn.active{border-color:var(--accent2);background:#f0f8ff}
+        .progress-bar {
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
 
-button{
-  border:none;border-radius:14px;
-  font-size:18px;font-weight:800;
-  padding:16px;touch-action:manipulation;
-}
-.start{
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  color:white;width:100%;margin-top:12px;
-}
-.quit{
-  background:#ffecec;color:#b00020;width:100%;margin-top:10px;
-}
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
 
-/* GAME */
-.game{display:none;margin-top:16px}
-.status{display:flex;flex-direction:column;gap:6px;font-size:14px}
-.bar{
-  width:100%;height:16px;background:#eaf0ff;
-  border-radius:10px;overflow:hidden;
-}
-.bar i{
-  display:block;height:100%;width:0%;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-}
-.question{
-  margin-top:16px;background:#f7fbff;
-  border-radius:14px;padding:18px;text-align:center;
-}
-.q-text{font-size:34px;font-weight:900;color:var(--accent2)}
-.options{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
-.opt{
-  background:white;border:2px solid #ddd;
-  border-radius:14px;padding:18px;
-  font-size:22px;font-weight:800;
-}
-.opt.correct{background:#eaffea;border-color:limegreen}
-.opt.wrong{background:#ffecec;border-color:#ff9aa2}
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
 
-/* RESULT */
-.result{display:none;text-align:center;padding:20px}
-.score{font-size:38px;font-weight:900;color:var(--accent)}
-.result-line{margin-top:6px;font-size:14px}
-.small{margin-top:10px;background:#eef3ff;color:#123;width:100%}
+        .animate-pop {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        #hidden-canvas {
+            display: none;
+        }
 
-@media (min-width:700px){
-  .app{max-width:720px}
-  .options{grid-template-columns:1fr 1fr}
-}
-</style>
+        .mode-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-width: 2px;
+        }
+        .mode-card:hover {
+            transform: translateY(-3px);
+            border-color: #6366f1;
+        }
+        .mode-card.selected {
+            background-color: #eef2ff;
+            border-color: #6366f1;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        }
+
+        #share-loading {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(2px);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: #6366f1;
+            padding: 0.5rem;
+            border-radius: 50%;
+            background: #f3f4f6;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .fullscreen-btn:hover {
+            background: #e0e7ff;
+            transform: scale(1.1);
+        }
+    </style>
 </head>
-
 <body>
-<div class="app">
 
-<header>
-  <div class="logo">GeniusHub</div>
-  <h1>GeniusHub Math Game</h1>
-  <div class="lead">Oral Addition Practice</div>
-</header>
+    <div id="share-loading">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mb-4"></div>
+            <p>Preparing result image...</p>
+        </div>
+    </div>
 
-<!-- SETUP -->
-<div class="panel" id="setup">
-  <label>Your Name</label>
-  <input id="name" type="text" placeholder="Enter your name">
+    <div id="game-container" class="glass-card">
+        <!-- Full Screen Toggle -->
+        <button onclick="toggleFullScreen()" class="fullscreen-btn" title="Toggle Full Screen">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+            </svg>
+        </button>
+        
+        <!-- Screen: Main Menu & Mode Selection -->
+        <div id="screen-menu" class="text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-indigo-700 mb-1">GeniusHub</h1>
+            <p class="text-gray-500 mb-6 font-semibold uppercase tracking-widest text-xs sm:text-sm">Mental Math Master</p>
+            
+            <div class="mb-6">
+                <input type="text" id="player-name" placeholder="Enter Your Name" 
+                    class="w-full px-4 py-3 rounded-xl border-2 border-indigo-100 focus:border-indigo-500 outline-none text-center text-lg shadow-sm transition-all">
+            </div>
 
-  <label style="margin-top:12px">Select Level</label>
-  <div class="levels">
-    <button class="level-btn active" data-level="1">1 digit + 1 digit</button>
-    <button class="level-btn" data-level="2">2 digit + 1 digit</button>
-    <button class="level-btn" data-level="3">2 digit + 2 digit</button>
-    <button class="level-btn" data-level="4">3 digit + 2 digit</button>
-    <button class="level-btn" data-level="5">3 digit + 3 digit</button>
-  </div>
+            <p class="text-left text-xs font-bold text-gray-400 uppercase mb-3 px-1">Choose Operation</p>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div onclick="selectMode('add')" id="mode-add" class="mode-card bg-white border-gray-100 p-3 rounded-xl flex flex-col items-center">
+                    <span class="text-2xl mb-1">➕</span>
+                    <span class="text-xs font-bold text-gray-600">Addition</span>
+                </div>
+                <div onclick="selectMode('sub')" id="mode-sub" class="mode-card bg-white border-gray-100 p-3 rounded-xl flex flex-col items-center">
+                    <span class="text-2xl mb-1">➖</span>
+                    <span class="text-xs font-bold text-gray-600">Subtraction</span>
+                </div>
+                <div onclick="selectMode('mul')" id="mode-mul" class="mode-card bg-white border-gray-100 p-3 rounded-xl flex flex-col items-center selected">
+                    <span class="text-2xl mb-1">✖️</span>
+                    <span class="text-xs font-bold text-gray-600">Multiplication</span>
+                </div>
+                <div onclick="selectMode('div')" id="mode-div" class="mode-card bg-white border-gray-100 p-3 rounded-xl flex flex-col items-center">
+                    <span class="text-2xl mb-1">➗</span>
+                    <span class="text-xs font-bold text-gray-600">Division</span>
+                </div>
+            </div>
 
-  <button class="start" id="startBtn">Start Game</button>
-</div>
+            <p class="text-left text-xs font-bold text-gray-400 uppercase mb-3 px-1">Choose Level</p>
+            <div id="level-buttons-container" class="space-y-2 sm:space-y-3">
+                <!-- Level buttons injected by JS -->
+            </div>
+        </div>
 
-<!-- GAME -->
-<div class="game" id="game">
-  <div class="status">
-    <div id="playerInfo"></div>
-    <div class="bar"><i id="barFill"></i></div>
-    <div id="counter"></div>
-    <div id="timer"></div>
-  </div>
+        <!-- Screen: Game Play -->
+        <div id="screen-game" class="hidden">
+            <div class="flex justify-between items-start mb-4 pt-4 sm:pt-0">
+                <div class="max-w-[60%]">
+                    <p id="game-player-display" class="font-bold text-indigo-600 truncate text-sm sm:text-base"></p>
+                    <p class="text-[10px] sm:text-xs text-gray-500 uppercase font-bold tracking-tight" id="game-level-display"></p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xl sm:text-2xl font-bold text-gray-800 tabular-nums leading-none" id="timer">00:00</p>
+                    <button onclick="quitGame()" class="text-red-500 hover:text-red-700 text-[10px] sm:text-xs font-bold uppercase mt-1">Quit Game</button>
+                </div>
+            </div>
 
-  <div class="question">
-    <div class="q-text" id="question"></div>
-    <div class="options" id="options"></div>
-  </div>
+            <div class="progress-bar mb-6 sm:mb-8">
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
 
-  <button class="quit" id="quitBtn">Quit Game</button>
-</div>
+            <div class="text-center mb-6 sm:mb-10">
+                <p class="text-xs sm:text-sm text-gray-400 mb-1">Question <span id="current-q-num">1</span> of 50</p>
+                <h2 id="question-text" class="text-4xl sm:text-6xl font-bold text-gray-800 tracking-tight"></h2>
+            </div>
 
-<!-- RESULT -->
-<div class="result" id="result">
-  <div class="score" id="finalScore"></div>
-  <div class="result-line" id="rName"></div>
-  <div class="result-line" id="rLevel"></div>
-  <div class="result-line" id="rAttempted"></div>
-  <div class="result-line" id="rCorrect"></div>
-  <div class="result-line" id="rTime"></div>
-  <button class="start" id="playAgain">Play Again</button>
-  <button class="small" id="home">Home</button>
-</div>
+            <div class="grid grid-cols-2 gap-3 sm:gap-4" id="options-container">
+                <!-- Options injected here -->
+            </div>
+        </div>
 
-</div>
+        <!-- Screen: Results -->
+        <div id="screen-result" class="hidden animate-pop">
+            <div class="text-center">
+                <div id="congrats-header" class="hidden mb-4 sm:mb-6">
+                    <div class="text-5xl sm:text-6xl mb-2 sm:mb-4">🏆</div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-green-600">Congratulations!</h2>
+                    <p class="text-gray-600 text-sm">Excellent mental speed!</p>
+                </div>
+                
+                <h2 class="text-xl sm:text-2xl font-bold text-indigo-800 mb-4 sm:mb-6" id="result-title">Practice Summary</h2>
+                
+                <div class="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 text-left space-y-2 sm:space-y-3 text-sm sm:text-base">
+                    <div class="flex justify-between border-b pb-1 sm:pb-2">
+                        <span class="text-gray-500">Player:</span>
+                        <span class="font-bold text-gray-800" id="res-name">-</span>
+                    </div>
+                    <div class="flex justify-between border-b pb-1 sm:pb-2">
+                        <span class="text-gray-500">Mode:</span>
+                        <span class="font-bold text-gray-800 uppercase" id="res-mode">-</span>
+                    </div>
+                    <div class="flex justify-between border-b pb-1 sm:pb-2">
+                        <span class="text-gray-500">Total Questions:</span>
+                        <span class="font-bold text-gray-800" id="res-attempted">0/50</span>
+                    </div>
+                    <div class="flex justify-between border-b pb-1 sm:pb-2">
+                        <span class="text-gray-500">Right Answers:</span>
+                        <span class="font-bold text-green-600" id="res-right">0</span>
+                    </div>
+                    <div class="flex justify-between border-b pb-1 sm:pb-2">
+                        <span class="text-gray-500">Score:</span>
+                        <span class="font-bold text-indigo-600" id="res-score">0%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Total Time:</span>
+                        <span class="font-bold text-gray-800" id="res-time">00:00</span>
+                    </div>
+                </div>
 
-<script>
-const levels=document.querySelectorAll('.level-btn');
-let level=1;
+                <div class="flex flex-col gap-2 sm:gap-3">
+                    <button onclick="shareResult()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 sm:py-4 rounded-xl shadow-lg transition-all text-sm sm:text-base flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                        Share Result
+                    </button>
+                    <button onclick="location.reload()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 sm:py-4 rounded-xl shadow-lg transition-all text-sm sm:text-base">
+                        Play Again
+                    </button>
+                </div>
+            </div>
+        </div>
 
-levels.forEach(b=>{
-  b.onclick=()=>{
-    levels.forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    level=+b.dataset.level;
-  };
-});
+    </div>
 
-const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+    <!-- Hidden Canvas -->
+    <canvas id="hidden-canvas" width="600" height="800"></canvas>
 
-const gen=l=>{
-  if(l===1) return [rand(0,9),rand(0,9)];
-  if(l===2) return [rand(10,99),rand(0,9)];
-  if(l===3) return [rand(10,99),rand(10,99)];
-  if(l===4) return [rand(100,999),rand(10,99)];
-  return [rand(100,999),rand(100,999)];
-};
+    <script>
+        // --- CONFIGURATION ---
+        const gameConfig = {
+            add: {
+                name: 'Addition', symbol: '+',
+                levels: [
+                    { label: '1 Digit + 1 Digit', rangeA: [1, 9], rangeB: [1, 9] },
+                    { label: '2 Digit + 1 Digit', rangeA: [10, 99], rangeB: [1, 9] },
+                    { label: '2 Digit + 2 Digit', rangeA: [10, 99], rangeB: [10, 99] },
+                    { label: '3 Digit + 2 Digit', rangeA: [100, 999], rangeB: [10, 99] },
+                    { label: '3 Digit + 3 Digit', rangeA: [100, 999], rangeB: [100, 999] }
+                ]
+            },
+            sub: {
+                name: 'Subtraction', symbol: '-',
+                levels: [
+                    { label: '1 Digit - 1 Digit', rangeA: [1, 9], rangeB: [1, 9] },
+                    { label: '2 Digit - 1 Digit', rangeA: [10, 99], rangeB: [1, 9] },
+                    { label: '2 Digit - 2 Digit', rangeA: [10, 99], rangeB: [10, 99] },
+                    { label: '3 Digit - 2 Digit', rangeA: [100, 999], rangeB: [10, 99] },
+                    { label: '3 Digit - 3 Digit', rangeA: [100, 999], rangeB: [100, 999] }
+                ]
+            },
+            mul: {
+                name: 'Multiplication', symbol: '×',
+                levels: [
+                    { label: 'Tables 0 - 5', rangeA: [0, 5], rangeB: [1, 10] },
+                    { label: 'Tables 6 - 10', rangeA: [6, 10], rangeB: [1, 10] },
+                    { label: 'Tables 11 - 15', rangeA: [11, 15], rangeB: [1, 10] },
+                    { label: 'Tables 16 - 20', rangeA: [16, 20], rangeB: [1, 10] },
+                    { label: 'Tables 21 - 100', rangeA: [21, 100], rangeB: [1, 10] }
+                ]
+            },
+            div: {
+                name: 'Division', symbol: '÷',
+                levels: [
+                    { label: 'Divisors 2 - 5', rangeA: [2, 5], rangeB: [1, 10] },
+                    { label: 'Divisors 6 - 10', rangeA: [6, 10], rangeB: [1, 10] },
+                    { label: 'Divisors 11 - 15', rangeA: [11, 15], rangeB: [1, 10] },
+                    { label: 'Divisors 16 - 20', rangeA: [16, 20], rangeB: [1, 10] },
+                    { label: 'Mixed Mastery up to 100', rangeA: [2, 100], rangeB: [1, 10] }
+                ]
+            }
+        };
 
-let questions=[],index=0,correct=0,startTime,name='';
+        let playerName = "";
+        let selectedMode = 'mul';
+        let currentLevelIndex = 0;
+        let questionNumber = 0;
+        let totalQuestions = 50;
+        let correctAnswers = 0;
+        let attemptedQuestions = 0;
+        let startTime;
+        let timerInterval;
+        let currentQuestion = { a: 0, b: 0, op: '', answer: 0 };
+        let isAnswering = false;
+        let questionDeck = [];
 
-function makeQuestions(){
-  questions=[];
-  for(let i=0;i<50;i++){
-    const [a,b]=gen(level);
-    questions.push({a,b,ans:a+b});
-  }
-}
+        const screens = {
+            menu: document.getElementById('screen-menu'),
+            game: document.getElementById('screen-game'),
+            result: document.getElementById('screen-result')
+        };
 
-function generateOptions(correct){
-  const options=new Set();
-  options.add(correct);
+        window.onload = () => renderLevelButtons();
 
-  // WRONG OPTION with SAME UNIT DIGIT
-  const unit=correct%10;
-  let sameUnit;
-  do{
-    sameUnit=(Math.floor(correct/10)+rand(1,9))*10+unit;
-  }while(sameUnit===correct);
-  options.add(sameUnit);
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
 
-  // Other distractors
-  while(options.size<4){
-    let candidate=correct+rand(-20,20);
-    if(candidate>0) options.add(candidate);
-  }
+        function selectMode(mode) {
+            selectedMode = mode;
+            document.querySelectorAll('.mode-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById(`mode-${mode}`).classList.add('selected');
+            renderLevelButtons();
+        }
 
-  return [...options].sort(()=>Math.random()-0.5);
-}
+        function renderLevelButtons() {
+            const container = document.getElementById('level-buttons-container');
+            container.innerHTML = '';
+            const config = gameConfig[selectedMode];
+            config.levels.forEach((lvl, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-3 rounded-xl font-bold border-2 border-indigo-100 transition-colors text-sm sm:text-base";
+                btn.innerText = `Level ${index + 1}: ${lvl.label}`;
+                btn.onclick = () => startGame(index);
+                container.appendChild(btn);
+            });
+        }
 
-function startGame(){
-  name=document.getElementById('name').value||'Player';
-  document.getElementById('setup').style.display='none';
-  document.getElementById('game').style.display='block';
-  document.getElementById('playerInfo').textContent=`${name} | Level ${level}`;
-  index=0;correct=0;startTime=Date.now();
-  makeQuestions();
-  nextQuestion();
-}
+        function formatQuestion(a, b, mode) {
+            const q = { op: gameConfig[mode].symbol };
+            if (mode === 'add') { q.a = a; q.b = b; q.answer = a + b; }
+            else if (mode === 'sub') {
+                if (a < b) { q.a = b; q.b = a; q.answer = b - a; }
+                else { q.a = a; q.b = b; q.answer = a - b; }
+            }
+            else if (mode === 'mul') { q.a = a; q.b = b; q.answer = a * b; }
+            else if (mode === 'div') { q.a = a * b; q.b = a; q.answer = b; }
+            return q;
+        }
 
-function nextQuestion(){
-  if(index>=questions.length){finishGame();return;}
+        function createDeck(levelIdx, mode) {
+            const lvl = gameConfig[mode].levels[levelIdx];
+            let deck = [];
+            const combinationsCount = (lvl.rangeA[1] - lvl.rangeA[0] + 1) * (lvl.rangeB[1] - lvl.rangeB[0] + 1);
 
-  const q=questions[index];
-  document.getElementById('question').textContent=`${q.a} + ${q.b} = ?`;
-  document.getElementById('counter').textContent=`Question ${index+1} / 50`;
-  document.getElementById('barFill').style.width=((index/50)*100)+'%';
+            if (combinationsCount <= 500) {
+                let pool = [];
+                for (let a = lvl.rangeA[0]; a <= lvl.rangeA[1]; a++) {
+                    for (let b = lvl.rangeB[0]; b <= lvl.rangeB[1]; b++) {
+                        pool.push(formatQuestion(a, b, mode));
+                    }
+                }
+                for (let i = pool.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [pool[i], pool[j]] = [pool[j], pool[i]];
+                }
+                while (deck.length < 50) deck = deck.concat(pool);
+                return deck.slice(0, 50);
+            } else {
+                const seen = new Set();
+                while (deck.length < 50) {
+                    const a = Math.floor(Math.random() * (lvl.rangeA[1] - lvl.rangeA[0] + 1)) + lvl.rangeA[0];
+                    const b = Math.floor(Math.random() * (lvl.rangeB[1] - lvl.rangeB[0] + 1)) + lvl.rangeB[0];
+                    const key = `${a}_${b}`;
+                    if (!seen.has(key)) { seen.add(key); deck.push(formatQuestion(a, b, mode)); }
+                }
+                return deck;
+            }
+        }
 
-  const opts=generateOptions(q.ans);
-  const box=document.getElementById('options');
-  box.innerHTML='';
+        function startGame(levelIdx) {
+            const nameInput = document.getElementById('player-name').value.trim();
+            playerName = nameInput || "Genius Player";
+            currentLevelIndex = levelIdx;
+            questionNumber = 1;
+            correctAnswers = 0;
+            attemptedQuestions = 0;
+            questionDeck = createDeck(levelIdx, selectedMode);
+            document.getElementById('game-player-display').innerText = playerName;
+            document.getElementById('game-level-display').innerText = `${gameConfig[selectedMode].name} • Level ${levelIdx + 1}`;
+            startTime = Date.now();
+            startTimer();
+            showScreen('game');
+            generateQuestion();
+        }
 
-  opts.forEach(v=>{
-    const b=document.createElement('button');
-    b.className='opt';b.textContent=v;
-    b.onclick=()=>{
-      if(v===q.ans){b.classList.add('correct');correct++;}
-      else b.classList.add('wrong');
-      setTimeout(()=>{index++;nextQuestion();},900);
-    };
-    box.appendChild(b);
-  });
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const secs = String(elapsed % 60).padStart(2, '0');
+                document.getElementById('timer').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
 
-  document.getElementById('timer').textContent=
-    'Time: '+new Date(Date.now()-startTime).toISOString().substr(14,5);
-}
+        function generateQuestion() {
+            isAnswering = false;
+            currentQuestion = questionDeck[questionNumber - 1];
+            document.getElementById('question-text').innerText = `${currentQuestion.a} ${currentQuestion.op} ${currentQuestion.b}`;
+            document.getElementById('current-q-num').innerText = questionNumber;
+            document.getElementById('progress-fill').style.width = `${((questionNumber - 1) / totalQuestions) * 100}%`;
+            const answer = currentQuestion.answer;
+            let options = [answer];
+            while (options.length < 4) {
+                let wrong;
+                const strategy = Math.random();
+                const offsetScale = answer > 100 ? 10 : (answer > 20 ? 5 : 2);
+                if (strategy < 0.4) wrong = answer + (Math.random() > 0.5 ? offsetScale : -offsetScale);
+                else if (strategy < 0.7) wrong = answer + (Math.random() > 0.5 ? 1 : -1);
+                else wrong = answer + (Math.floor(Math.random() * 5) - 2) * 2;
+                wrong = Math.max(0, wrong);
+                if (!options.includes(wrong) && wrong !== answer) options.push(wrong);
+            }
+            options.sort(() => Math.random() - 0.5);
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn bg-white py-4 sm:py-6 rounded-xl sm:rounded-2xl text-xl sm:text-2xl font-bold text-gray-700 shadow-sm outline-none';
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(opt, btn);
+                container.appendChild(btn);
+            });
+        }
 
-function finishGame(){
-  document.getElementById('game').style.display='none';
-  document.getElementById('result').style.display='block';
+        function handleAnswer(selected, btn) {
+            if (isAnswering) return;
+            isAnswering = true;
+            attemptedQuestions++;
+            if (selected === currentQuestion.answer) { correctAnswers++; btn.classList.add('correct'); }
+            else {
+                btn.classList.add('wrong');
+                Array.from(document.querySelectorAll('.option-btn')).forEach(b => {
+                    if (parseInt(b.innerText) === currentQuestion.answer) b.classList.add('correct');
+                });
+            }
+            setTimeout(() => {
+                if (questionNumber < totalQuestions) { questionNumber++; generateQuestion(); }
+                else showResults();
+            }, 800);
+        }
 
-  const time=new Date(Date.now()-startTime).toISOString().substr(14,5);
+        function quitGame() { showResults(); }
 
-  document.getElementById('finalScore').textContent=`${correct} / ${index}`;
-  document.getElementById('rName').textContent=`Name: ${name}`;
-  document.getElementById('rLevel').textContent=`Level: ${level}`;
-  document.getElementById('rAttempted').textContent=`Attempted Questions: ${index}`;
-  document.getElementById('rCorrect').textContent=`Correct Answers: ${correct}`;
-  document.getElementById('rTime').textContent=`Time Taken: ${time}`;
-}
+        function showResults() {
+            clearInterval(timerInterval);
+            const totalTimeStr = document.getElementById('timer').innerText;
+            const scorePercent = Math.round((correctAnswers / totalQuestions) * 100);
+            document.getElementById('res-name').innerText = playerName;
+            document.getElementById('res-mode').innerText = `${gameConfig[selectedMode].name} (Lvl ${currentLevelIndex + 1})`;
+            document.getElementById('res-attempted').innerText = `${attemptedQuestions}/${totalQuestions}`;
+            document.getElementById('res-right').innerText = correctAnswers;
+            document.getElementById('res-score').innerText = `${scorePercent}%`;
+            document.getElementById('res-time').innerText = totalTimeStr;
+            document.getElementById('progress-fill').style.width = `100%`;
+            if (correctAnswers >= 45) {
+                document.getElementById('congrats-header').classList.remove('hidden');
+                document.getElementById('result-title').innerText = "Legendary Performance!";
+            } else {
+                document.getElementById('congrats-header').classList.add('hidden');
+                document.getElementById('result-title').innerText = "Session Complete";
+            }
+            showScreen('result');
+        }
 
-document.getElementById('startBtn').onclick=startGame;
-document.getElementById('quitBtn').onclick=finishGame;
-document.getElementById('playAgain').onclick=()=>{document.getElementById('result').style.display='none';startGame();};
-document.getElementById('home').onclick=()=>location.reload();
-</script>
+        function showScreen(screenId) {
+            Object.values(screens).forEach(s => s.classList.add('hidden'));
+            screens[screenId].classList.remove('hidden');
+        }
 
+        async function shareResult() {
+            const loading = document.getElementById('share-loading');
+            loading.style.display = 'flex';
+            
+            const canvas = document.getElementById('hidden-canvas');
+            const ctx = canvas.getContext('2d');
+            const primary = '#6366f1';
+            const secondary = '#4f46e5';
+
+            // Background
+            const gradient = ctx.createLinearGradient(0, 0, 0, 800);
+            gradient.addColorStop(0, '#667eea'); gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient; ctx.fillRect(0, 0, 600, 800);
+
+            // Card
+            ctx.fillStyle = 'white';
+            ctx.shadowBlur = 40; ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            const r = 40, x = 40, y = 80, w = 520, h = 640;
+            ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); ctx.fill();
+            
+            ctx.shadowBlur = 0;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = secondary; ctx.font = 'bold 44px Poppins';
+            ctx.fillText('GeniusHub', 300, 160);
+            ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 16px Poppins';
+            ctx.fillText('MENTAL MATH MASTERY', 300, 195);
+            ctx.fillStyle = '#111827'; ctx.font = 'bold 32px Poppins';
+            ctx.fillText(playerName, 300, 270);
+            ctx.fillStyle = primary; ctx.font = '600 20px Poppins';
+            ctx.fillText(`${gameConfig[selectedMode].name} • Level ${currentLevelIndex + 1}`, 300, 310);
+
+            ctx.strokeStyle = '#f3f4f6'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(100, 340); ctx.lineTo(500, 340); ctx.stroke();
+
+            ctx.textAlign = 'left';
+            const stats = [
+                { label: 'Session Type', val: gameConfig[selectedMode].name },
+                { label: 'Attempted', val: attemptedQuestions },
+                { label: 'Correct', val: correctAnswers },
+                { label: 'Score', val: `${Math.round((correctAnswers/totalQuestions)*100)}%` },
+                { label: 'Total Time', val: document.getElementById('res-time').innerText }
+            ];
+
+            let startY = 390;
+            stats.forEach(stat => {
+                ctx.fillStyle = '#6b7280'; ctx.font = '400 20px Poppins';
+                ctx.fillText(stat.label, 120, startY);
+                ctx.fillStyle = '#111827'; ctx.font = 'bold 22px Poppins';
+                ctx.textAlign = 'right'; ctx.fillText(stat.val, 480, startY);
+                ctx.textAlign = 'left'; startY += 50;
+            });
+
+            if (correctAnswers >= 45) {
+                ctx.textAlign = 'center'; ctx.fillStyle = '#059669'; ctx.font = 'bold 28px Poppins';
+                ctx.fillText('🏆 MENTAL MATH GENIUS 🏆', 300, 660);
+            }
+
+            canvas.toBlob(async (blob) => {
+                loading.style.display = 'none';
+                const file = new File([blob], `GeniusHub_${playerName.replace(/\s+/g,'_')}.png`, { type: 'image/png' });
+                
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'My GeniusHub Result',
+                            text: `Check out my ${gameConfig[selectedMode].name} score! 🏆`
+                        });
+                    } catch (err) {
+                        console.log('Share canceled or failed:', err);
+                    }
+                } else {
+                    const link = document.createElement('a');
+                    link.download = `GeniusHub_${playerName.replace(/\s+/g,'_')}.png`;
+                    link.href = URL.createObjectURL(blob);
+                    link.click();
+                }
+            }, 'image/png');
+        }
+    </script>
 </body>
 </html>
